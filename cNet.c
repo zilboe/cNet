@@ -20,6 +20,7 @@ void cNet_initArgument(cNetControl_t *pCnet)
     pCnet->cNet_local_port = 0;
     pCnet->cNet_remote_ip = 0;
     pCnet->cNet_remote_port = 0;
+    pCnet->cNet_get_conf_flag = 0;
     pCnet->cNet_config = NOKOWN_CONFIG;
 }
 
@@ -31,6 +32,12 @@ int main(int argc, const char *argv[])
     if(cNet_parseArgv(argc, argv, &cNet) == -1) {
         return -1;
     }
+
+    if(cNet.cNet_get_conf_flag == 0) {
+        return -1;
+    }
+
+    
 
     return 0;
 }

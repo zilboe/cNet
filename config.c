@@ -36,19 +36,17 @@ int cNet_parseServer(char *content, int size, cNetControl_t *pCnet)
 
     if(!analy_size)
         goto parse_ser_with_err;
-    
-    if(strncmp(p, SERVER_TITLE_1_CONTENT, SERVER_TITLE_1_LEN) != 0)
-        goto parse_ser_with_err;
-    
-    p += SERVER_TITLE_1_LEN;
-    if(*p++!='=')
-        goto parse_ser_with_err;
-    
-    port = atoi(p);
 
-    if(cNet_bindSerPort(pCnet, port) == -1) 
-        goto parse_ser_with_err;
-    
+    if(strncmp(p, SERVER_TITLE_1_CONTENT, SERVER_TITLE_1_LEN) == 0) {
+        p += SERVER_TITLE_1_LEN;
+        if(*p++!='=')
+            goto parse_ser_with_err;
+        
+        port = atoi(p);
+        if(cNet_bindSerPort(pCnet, port) == -1) 
+            goto parse_ser_with_err;
+    }
+
     return 0;
 parse_ser_with_err:
     return -1;
@@ -68,8 +66,8 @@ int cNet_parseClient(char *content, int size, cNetControl_t *pCnet)
 int cNet_parseConfig(FILE *fp, CONFIG_E ser_or_cli, cNetControl_t *pCnet)
 {
     char buffer[256];
-    int buff_len = 0;
-    int parse_result = 0;
+    int buff_len=0;
+    int parse_result=0;
     pCnet->cNet_config = ser_or_cli;
     memset(buffer, 0x0, sizeof(buffer));
     while(fgets(buffer, sizeof(buffer), fp)!=NULL) {
@@ -87,8 +85,8 @@ int cNet_parseConfig(FILE *fp, CONFIG_E ser_or_cli, cNetControl_t *pCnet)
 
 int cNet_parseArgv(int argc, const char *argv[], cNetControl_t *pCnet)
 {
-    char *srouce_config = NULL;
-    CONFIG_E server_or_client = NOKOWN_CONFIG;
+    char *srouce_config=NULL;
+    CONFIG_E server_or_client=NOKOWN_CONFIG;
     if(argc == 0) {
         printf("Config Is Null\n");
         return -1;

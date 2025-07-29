@@ -14,6 +14,8 @@ typedef enum CONFIG_E {
 typedef struct cNetControl_t {
     CONFIG_E    cNet_config;
 
+    unsigned char cNet_get_conf_flag;
+
     unsigned short cNet_local_port;
 
     unsigned short cNet_remote_port;

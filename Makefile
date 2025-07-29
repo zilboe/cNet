@@ -1,7 +1,21 @@
-all:
-	gcc client.c -o client
-	gcc server.c -o server
-conf:
-	gcc config.c cNet.c -o cNet
+CC=gcc
+RM=rm
+CFLAGS=-Wall -std=gnu99
+TARGET:=cNet
+TARGET_CONF:=cNetConf
+SOURCES=cNet.c config.c memPool.c threadPool.c tunnel.c client.c server.c
+CONF_SOURCES=cNet.c config.c
+
+all: $(TARGET)
+$(TARGET): $(SOURCES)
+	$(CC) $(CFLAGS) $^ -o $@
+
+conf: $(TARGET_CONF)
+$(TARGET_CONF): $(CONF_SOURCES)
+	$(CC) $(CFLAGS) $^ -o $@
 clean:
-	rm client server cNet
+	$(RM) -f *.o
+	$(RM) -f $(TARGET_CONF)
+	$(RM) -f $(TARGET)
+
+.PHONY: all conf clean

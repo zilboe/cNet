@@ -8,11 +8,11 @@ CONF_SOURCES=cNet.c config.c
 OPT=-O1
 all: $(TARGET)
 $(TARGET): $(SOURCES)
-	$(CC) $(CFLAGS) $(OPT) -Q $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@
 
 conf: $(TARGET_CONF)
 $(TARGET_CONF): $(CONF_SOURCES)
-	$(CC) $(CFLAGS) $(OPT) -Q $^ -o $@
+	$(CC) $(CFLAGS) $^ -o $@
 clean:
 	$(RM) -f *.o
 	$(RM) -f $(TARGET_CONF)

@@ -1,6 +1,6 @@
 #include "cNet.h"
 #include "config.h"
-int cNet_bindSerPort(cNetControl_t *pCnet, unsigned short port)
+int cNet_serBindport(cNetControl_t *pCnet, unsigned short port)
 {
     static unsigned char cnet_get_port=0;
     if(cnet_get_port == 1)

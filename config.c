@@ -17,9 +17,7 @@ static cNet_title_t cNet_confSerTitle[] = {
     {SERVER_TITLE_PORT, SERVER_TITLE_PORT_LEN, NULL},
 };
 
-
-
-int cNet_strStripSpaceInPlace(char *content, int size)
+int cNet_strStripOtherCh(char *content, int size)
 {
     int write_pos=0;
     
@@ -27,9 +25,9 @@ int cNet_strStripSpaceInPlace(char *content, int size)
         return 0;
 
     for (int read_pos=0; read_pos<size; read_pos++) {
-        if (content[read_pos] != ' ') {
-            content[write_pos++] = content[read_pos];
-        }
+        if (content[read_pos]==' ' || content[read_pos]=='[' || content[read_pos]==']') 
+            continue;
+        content[write_pos++] = content[read_pos];
     }
 
     content[write_pos] = '\0';
@@ -48,38 +46,60 @@ void cNet_strTolower(char *content, int size)
     content[pos] = '\0';
 }
 
-int cNet_strCmpTitle(char **content, int size, int line)
+int cNet_strCmpErr(const char *src_content, int src_len, int line, cNet_title_t **pTitle, int title_size)
 {
-    char *pTitle=SERVER_TITLE_PORT;
-    int i=0,index=0;
-    
-    if(**content != 'b') {
-        printf("Server Err: Config File Line[%d] Unkown\n", line);
-        return -1;
-    }
-    for(i=1; i<SERVER_TITLE_PORT_LEN&&i<size; i++) {
-        if((*((*content)+i)) != *(pTitle+i)) {
-            printf("Server Err: Config File Line[%d] Unkown,Do You Mean \"%s\"\n", line, SERVER_TITLE_PORT);
-            return -1;
+    int str_cmp_count[title_size];
+    int max_len=0;
+    int max_index=0;
+    for(int i=0; i<title_size; i++)
+        str_cmp_count[i] = 0;
+
+    for(int i=0; i<title_size; i++) {
+        for(int j=0; j<pTitle[i]->title_len&&j<src_len; j++) {
+            if(src_content[j] == pTitle[i]->title[j])
+                str_cmp_count[i]++;
         }
     }
-    if(i < SERVER_TITLE_PORT_LEN) {
-        printf("Server Err: Config File Line[%d] Unkown,Do You Mean \"%s\"\n", line, SERVER_TITLE_PORT);
-        return -1;
+    max_len=str_cmp_count[0];
+    for(int i=0; i<title_size; i++) {
+        if(max_len < str_cmp_count[i]) {
+            max_len = str_cmp_count[i];
+            max_index = i;
+        }
     }
-    (*content) += SERVER_TITLE_PORT_LEN;
+    printf("Server ERR: Config File Line[%d],Do you mean \"%s\"\n", line, pTitle[max_index]->title);
     return 0;
 }
 
-int cNet_parseServer(char *content, int size, cNetControl_t *pCnet, int line)
+int cNet_strCmpTitle(char *content, int size, int line, cNetControl_t *pCnet)
+{
+    int cNet_size=(pCnet->cNet_config==SERVER_CONFIG) ? SIZE(cNet_confSerTitle) : SIZE(cNet_confCliTitle);
+    cNet_title_t *pDst_title=(pCnet->cNet_config==SERVER_CONFIG) ? (&cNet_confSerTitle[0]) : (&cNet_confCliTitle[0]);
+    int index=0;
+    for(index=0; index<cNet_size; index++) {
+        cNet_title_t *dst_title = &pDst_title[index];
+        if(strncmp(content, dst_title->title, dst_title->title_len) != 0)  
+            continue;
+        return 0;
+        // if(dst_title->cNet_analyTitle == NULL)  
+        //     return -1;
+
+        // if(dst_title->cNet_analyTitle(pCnet, size, line) == 0) 
+        //     return 0;
+    }
+    cNet_strCmpErr(content, size, line, &pDst_title, cNet_size);
+    return -1;
+}
+
+int cNet_parseLine(char *content, int size, cNetControl_t *pCnet, int line)
 {
     int analy_size=0;
     char *p=content;
 	if(size==0 || p==NULL) 
-		goto parse_ser_with_err;
-    analy_size = cNet_strStripSpaceInPlace(p, size);
+		goto parse_with_err;
+    analy_size = cNet_strStripOtherCh(p, size);
     if(!analy_size)
-        goto parse_ser_with_err;
+        goto parse_with_err;
 
     if(*p == '\n')
         return 0;
@@ -87,54 +107,17 @@ int cNet_parseServer(char *content, int size, cNetControl_t *pCnet, int line)
     *(p+size-1) = '\0';
     cNet_strTolower(p, size);
 
-    if(cNet_strCmpTitle(&p, size, line) == 0) {
+    if(cNet_strCmpTitle(p, size, line, pCnet) == 0) {
 
-        if(*p++!='=')
-            goto parse_ser_with_err;
         
-        if(cNet_bindSerPort(pCnet, atoi(p)) == -1) 
-            goto parse_ser_with_err;
     } else {
         return -1;
     }
     
     return 0;
-parse_ser_with_err:
+parse_with_err:
     return -1;
 
-}
-
-int cNet_parseClient(char *content, int size, cNetControl_t *pCnet, int line)
-{
-    char *p=content;
-    int analy_size=0;
-    if(size==0 || content==NULL) {
-        printf("Client:Parse Config Err\n");
-        return -1;
-    }
-    analy_size = cNet_strStripSpaceInPlace(p, size);
-    if(!analy_size)
-        goto parse_cli_with_err;
-        
-    if(*p == '\n')
-        return 0;
-    
-    cNet_strTolower(p, size);
-
-    if(cNet_strCmpTitle(&p, size, line) == 0) {
-
-        if(*p++!='=')
-            goto parse_cli_with_err;
-        
-        if(cNet_bindSerPort(pCnet, atoi(p)) == -1) 
-            goto parse_cli_with_err;
-    } else {
-        return -1;
-    }
-    
-    return 0;
-parse_cli_with_err:
-    return -1;
 }
 
 int cNet_parseConfig(FILE *fp, CONFIG_E ser_or_cli, cNetControl_t *pCnet)
@@ -147,11 +130,8 @@ int cNet_parseConfig(FILE *fp, CONFIG_E ser_or_cli, cNetControl_t *pCnet)
     memset(buffer, 0x0, sizeof(buffer));
     while(fgets(buffer, sizeof(buffer), fp)!=NULL) {
         buff_len = strlen(buffer);
-        if(ser_or_cli == SERVER_CONFIG)
-            parse_result = cNet_parseServer(buffer, buff_len, pCnet, ++line);
-        else
-            parse_result = cNet_parseClient(buffer, buff_len, pCnet, ++line);
-        
+        parse_result = cNet_parseLine(buffer, buff_len, pCnet, ++line);
+        memset(buffer, 0x0, sizeof(buffer));
         if(parse_result)
             break;
     }

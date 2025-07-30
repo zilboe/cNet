@@ -6,6 +6,6 @@
 #define     SERVER_TITLE_PORT                 ("bindport")
 #define     SERVER_TITLE_PORT_LEN             (strlen(SERVER_TITLE_PORT))
 typedef enum SERVER_TITLE_E {
-    TITLE_SERVERPORT,
+    SER_TITLE_SERVERPORT=0,
 }SERVER_TITLE_E;
 #endif

@@ -11,20 +11,28 @@ typedef enum CONFIG_E {
     CLIENT_CONFIG,
 }CONFIG_E;
 
+typedef struct cNet_cliControl_t {
+    unsigned int cNet_local_ip;
+    unsigned int cNet_remote_ip;
+    unsigned short cNet_local_port;
+    unsigned short cNet_remote_port;
+    unsigned short cNet_init;
+    struct cNet_cliControl_t *next;
+}cNet_cliControl_t;
+
+typedef struct cNet_serControl_t {
+    unsigned short cNet_local_port;
+    unsigned short cNet_init;
+}cNet_serControl_t;
+
+typedef int (*cNet_initCall)(struct cNetControl_t *);
 typedef struct cNetControl_t {
     CONFIG_E    cNet_config;
-
-    unsigned char cNet_get_conf_flag;
-
-    unsigned short cNet_local_port;
-
-    unsigned short cNet_remote_port;
-
-    unsigned int cNet_local_ip;
-
-    unsigned int cNet_remote_ip;
+    cNet_cliControl_t *cNet_client;
+    cNet_serControl_t *cNet_server;
+    cNet_initCall init;
 } cNetControl_t;
 
-extern int cNet_bindSerPort(cNetControl_t *pCnet, unsigned short port);
+int cNet_serBindport(cNetControl_t *pCnet, unsigned short port);
 
 #endif

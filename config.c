@@ -71,32 +71,51 @@ int cNet_strCmpErr(const char *src_content, int src_len, int line, cNet_title_t 
     return 0;
 }
 
+void cNet_strBreakDown(char *content, int size, char **key, char **value)
+{
+    int equal=0;
+    *key = content;
+    for(equal=0; equal<size; equal++) {
+        if(content[equal]=='=') {
+            content[equal] = '\0';
+            *value = content[equal+1];
+            return;
+        }
+    }
+}
+
 int cNet_strCmpTitle(char *content, int size, int line, cNetControl_t *pCnet)
 {
-    int cNet_size=(pCnet->cNet_config==SERVER_CONFIG) ? SIZE(cNet_confSerTitle) : SIZE(cNet_confCliTitle);
-    cNet_title_t *pDst_title=(pCnet->cNet_config==SERVER_CONFIG) ? (&cNet_confSerTitle[0]) : (&cNet_confCliTitle[0]);
+    int title_size=0;
     int index=0;
-    for(index=0; index<cNet_size; index++) {
-        cNet_title_t *dst_title = &pDst_title[index];
-        if(strncmp(content, dst_title->title, dst_title->title_len) != 0)  
-            continue;
-        return 0;
-        // if(dst_title->cNet_analyTitle == NULL)  
-        //     return -1;
+    cNet_title_t *pDst_title=NULL;
+    char *key=NULL;
+    char *value=NULL;
+    int i=0,j=0;
 
-        // if(dst_title->cNet_analyTitle(pCnet, size, line) == 0) 
-        //     return 0;
+    title_size = (pCnet->cNet_config==SERVER_CONFIG) ? SIZE(cNet_confSerTitle) : SIZE(cNet_confCliTitle);
+    pDst_title = (pCnet->cNet_config==SERVER_CONFIG) ? (&cNet_confSerTitle[0]) : (&cNet_confCliTitle[0]);
+
+    /* I think it's necessary to break down the original content here for easier analysis */
+    cNet_strBreakDown(content, size, &key, &value);
+
+    for(i=0; i<title_size; i++) {
+        
     }
-    cNet_strCmpErr(content, size, line, &pDst_title, cNet_size);
-    return -1;
+    
+    return 0;
 }
 
 int cNet_parseLine(char *content, int size, cNetControl_t *pCnet, int line)
 {
     int analy_size=0;
-    char *p=content;
+    char *p=NULL;
+
+    p = content;
 	if(size==0 || p==NULL) 
 		goto parse_with_err;
+
+    /* Remove whitespace characters and other useless characters */
     analy_size = cNet_strStripOtherCh(p, size);
     if(!analy_size)
         goto parse_with_err;
@@ -109,7 +128,6 @@ int cNet_parseLine(char *content, int size, cNetControl_t *pCnet, int line)
 
     if(cNet_strCmpTitle(p, size, line, pCnet) == 0) {
 
-        
     } else {
         return -1;
     }
@@ -120,13 +138,12 @@ parse_with_err:
 
 }
 
-int cNet_parseConfig(FILE *fp, CONFIG_E ser_or_cli, cNetControl_t *pCnet)
+int cNet_parseConfig(FILE *fp, cNetControl_t *pCnet)
 {
     char buffer[256];
     int buff_len=0;
     int parse_result=0;
     int line=0;
-    pCnet->cNet_config = ser_or_cli;
     memset(buffer, 0x0, sizeof(buffer));
     while(fgets(buffer, sizeof(buffer), fp)!=NULL) {
         buff_len = strlen(buffer);
@@ -140,8 +157,9 @@ int cNet_parseConfig(FILE *fp, CONFIG_E ser_or_cli, cNetControl_t *pCnet)
 
 int cNet_parseArgv(int argc, const char *argv[], cNetControl_t *pCnet)
 {
-    char *srouce_config=NULL;
-    CONFIG_E server_or_client=NOKOWN_CONFIG;
+    char *p_config_name=NULL;
+    FILE *fp=NULL;
+
     if(argc == 0) {
         printf("Config Is Null\n");
         return -1;
@@ -149,25 +167,25 @@ int cNet_parseArgv(int argc, const char *argv[], cNetControl_t *pCnet)
     
     for(int i=1; i<argc; i++) {
         if(strcmp(argv[i], "-c")==0) {
-            server_or_client = CLIENT_CONFIG;
+            pCnet->cNet_config = CLIENT_CONFIG;
         } else if(strcmp(argv[i], "-s")==0) {
-            server_or_client = SERVER_CONFIG;
+            pCnet->cNet_config = SERVER_CONFIG;
         } else {
-            if(server_or_client!=SERVER_CONFIG && server_or_client!=CLIENT_CONFIG) {
-                srouce_config = NULL;
+            if(pCnet->cNet_config!=SERVER_CONFIG && pCnet->cNet_config!=CLIENT_CONFIG) {
+                p_config_name = NULL;
             } else {
-                srouce_config = (char*)argv[i];
+                p_config_name = (char*)argv[i];
             }
         }
     }
-    FILE *fp=fopen(srouce_config, "r");
+
+    fp = fopen(p_config_name, "r");
     if(fp == NULL) {
-        printf("Config noKown\n");
+        printf("cNet Err:There no config file\n");
         return -1;
     }
 
-    if(cNet_parseConfig(fp, server_or_client, pCnet) == -1) {
-        printf("Config Err\n");
+    if(cNet_parseConfig(fp, pCnet) == -1) {
         return -1;
     }
 

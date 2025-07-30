@@ -10,34 +10,21 @@ int cNet_serBindport(cNetControl_t *pCnet, unsigned short port)
         printf("Server:cNet Port Err\n");
         return -1;
     }
-    pCnet->cNet_local_port = port;
+   
     return 0;
 }
 
-void cNet_initArgument(cNetControl_t *pCnet)
-{
-    pCnet->cNet_local_port = 0;
-    pCnet->cNet_local_port = 0;
-    pCnet->cNet_remote_ip = 0;
-    pCnet->cNet_remote_port = 0;
-    pCnet->cNet_get_conf_flag = 0;
-    pCnet->cNet_config = NOKOWN_CONFIG;
-}
 
 int main(int argc, const char *argv[])
 {
+    /*  */
     cNetControl_t cNet;
-    cNet_initArgument(&cNet);
+    memset(&cNet, 0x0, sizeof(cNetControl_t));
 
+    /* Initialize the parameters and analyze the configuration file */
     if(cNet_parseArgv(argc, argv, &cNet) == -1) {
         return -1;
     }
-
-    if(cNet.cNet_get_conf_flag == 0) {
-        return -1;
-    }
-
-    
 
     return 0;
 }

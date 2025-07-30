@@ -1,6 +1,24 @@
 #include "config.h"
 #include "server.h"
 #include "client.h"
+#define     SIZE(X)     (sizeof(X)/sizeof(X[0]))
+static cNet_title_t cNet_confCliTitle[] = {
+    {CLIENT_TITLE_SERVERADDR, CLIENT_TITLE_SERVERADDR_LEN, NULL},
+    {CLIENT_TITLE_SERVERPORT, CLIENT_TITLE_SERVERPORT_LEN, NULL},
+    {CLIENT_TITLE_PROXY, CLIENT_TITLE_PROXY_LEN, NULL},
+    {CLIENT_TITLE_NAME, CLIENT_TITLE_NAME_LEN, NULL},
+    {CLIENT_TITLE_TYPE, CLIENT_TITLE_TYPE_LEN, NULL},
+    {CLIENT_TITLE_LOCALIP, CLIENT_TITLE_LOCALIP_LEN, NULL},
+    {CLIENT_TITLE_LOCALPORT, CLIENT_TITLE_LOCALPORT_LEN, NULL},
+    {CLIENT_TITLE_REMOTEPORT, CLIENT_TITLE_REMOTEPORT_LEN, NULL},
+};
+
+static cNet_title_t cNet_confSerTitle[] = {
+    {SERVER_TITLE_PORT, SERVER_TITLE_PORT_LEN, NULL},
+};
+
+
+
 int cNet_strStripSpaceInPlace(char *content, int size)
 {
     int write_pos=0;
@@ -33,7 +51,8 @@ void cNet_strTolower(char *content, int size)
 int cNet_strCmpTitle(char **content, int size, int line)
 {
     char *pTitle=SERVER_TITLE_PORT;
-    int i=0;
+    int i=0,index=0;
+    
     if(**content != 'b') {
         printf("Server Err: Config File Line[%d] Unkown\n", line);
         return -1;
@@ -97,14 +116,20 @@ int cNet_parseClient(char *content, int size, cNetControl_t *pCnet, int line)
     if(!analy_size)
         goto parse_cli_with_err;
         
+    if(*p == '\n')
+        return 0;
+    
     cNet_strTolower(p, size);
 
-    if(strncmp(p, CLIENT_TITLE_REMOTEADDR, CLIENT_TITLE_REMOTEADDR_LEN) == 0) {
+    if(cNet_strCmpTitle(&p, size, line) == 0) {
+
+        if(*p++!='=')
+            goto parse_cli_with_err;
         
-    } else if(strncmp(p, CLIENT_TITLE_REMOTEPORT, CLIENT_TITLE_REMOTEPORT_LEN) == 0) {
-
+        if(cNet_bindSerPort(pCnet, atoi(p)) == -1) 
+            goto parse_cli_with_err;
     } else {
-
+        return -1;
     }
     
     return 0;

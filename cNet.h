@@ -11,28 +11,37 @@ typedef enum CONFIG_E {
     CLIENT_CONFIG,
 }CONFIG_E;
 
+typedef struct cNet_cliMap_t {
+    bool cNet_map_config_flag;
+    char *cNet_map_name;
+    char *cNet_map_type;
+    char *cNet_map_local_ip;
+    unsigned short cNet_map_local_port;
+    char *cNet_map_server_ip;
+    unsigned short cNet_map_server_port;
+    struct cNet_cliMap_t *next;
+}cNet_cliMap_t;
+
 typedef struct cNet_cliControl_t {
-    unsigned int cNet_local_ip;
-    unsigned int cNet_remote_ip;
-    unsigned short cNet_local_port;
-    unsigned short cNet_remote_port;
-    unsigned short cNet_init;
-    struct cNet_cliControl_t *next;
+    char *cNet_server_ip;
+    unsigned short cNet_server_port;
+    bool init_flag;
+    int cNet_map_size;
+    cNet_cliMap_t *cNet_map_config;
 }cNet_cliControl_t;
 
 typedef struct cNet_serControl_t {
     unsigned short cNet_local_port;
-    unsigned short cNet_init;
+    bool init_flag;
 }cNet_serControl_t;
 
-typedef int (*cNet_initCall)(struct cNetControl_t *);
+
 typedef struct cNetControl_t {
     CONFIG_E    cNet_config;
     cNet_cliControl_t *cNet_client;
     cNet_serControl_t *cNet_server;
-    cNet_initCall init;
+    int (*cNet_init)(struct cNetControl_t);
 } cNetControl_t;
 
-int cNet_serBindport(cNetControl_t *pCnet, unsigned short port);
 
 #endif

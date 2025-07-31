@@ -4,7 +4,7 @@ CFLAGS=-Wall -std=gnu99
 TARGET:=cNet
 TARGET_CONF:=cNetConf
 SOURCES=cNet.c config.c memPool.c threadPool.c tunnel.c client.c server.c
-CONF_SOURCES=cNet.c config.c
+CONF_SOURCES=cNet.c config.c memPool.c
 OPT=-O1
 all: $(TARGET)
 $(TARGET): $(SOURCES)

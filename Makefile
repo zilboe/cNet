@@ -1,21 +1,29 @@
-CC=gcc
-RM=rm
-CFLAGS=-Wall -std=gnu99
-TARGET:=cNet
-TARGET_CONF:=cNetConf
-SOURCES=cNet.c config.c memPool.c threadPool.c tunnel.c client.c server.c
-CONF_SOURCES=cNet.c config.c memPool.c server.c client.c
-OPT=-O1
+PROJECT = cNet
+CC = gcc
+INCLUDE_DIR = ./include
+CFLAGS = -Wall -I$(INCLUDE_DIR)
+OBJ_DIR = build
+TARGET = $(OBJ_DIR)/$(PROJECT)
+SRC_DIR = src
+TESTS_DIR = tests
+SRCS := $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/*/*.c) $(wildcard $(SRC_DIR)/*/*/*.c)
+OBJS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
+
 all: $(TARGET)
-$(TARGET): $(SOURCES)
-	$(CC) $(CFLAGS) $^ -o $@
+$(TARGET): $(OBJS)
+	@mkdir -p $(OBJ_DIR)
+	$(CC) $(CFLAGS) -o $@ $^
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-conf: $(TARGET_CONF)
-$(TARGET_CONF): $(CONF_SOURCES)
-	$(CC) $(CFLAGS) $^ -o $@
 clean:
-	$(RM) -f *.o
-	$(RM) -f $(TARGET_CONF)
-	$(RM) -f $(TARGET)
+	rm -rf $(OBJ_DIR)/*
 
-.PHONY: all conf clean
+test: all
+	@echo "Running tests..."
+	@for t in $(wildcard $(TESTS_DIR)/*.c); do \
+		echo "Testing $$t..."; \
+		$(CC) $(CFLAGS) -o $(OBJ_DIR)/$${t##*/} $$t $(TARGET); \
+		$(OBJ_DIR)/$${t##*/}; \
+	done

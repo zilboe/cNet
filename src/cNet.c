@@ -14,8 +14,14 @@ int main(int argc, const char *argv[])
     static unsigned char get_config_flag = 0;
     char *config_file;
     struct cNet_control_t *cNet=NULL;
-    if(argc != 3)
-        return -1;
+
+    if(argc == 2) {
+        if((strncmp(argv[1], "-v", strlen("-v"))==0) || (strncmp(argv[1], "-V", strlen("-V"))==0)) {
+            printf("cNet Version: %d.%d.%d\n", MAJOR_VERSION, MINOR_VERSION, BUILD_VERSION);
+            return 0;
+        }
+    }
+
     cNet = (struct cNet_control_t*)cNet_malloc(sizeof(struct cNet_control_t));
     if(!cNet)
         return -1;

@@ -324,8 +324,10 @@ int cNet_parse_config(const char *file_name, struct cNet_control_t *p)
     if(!file_name || !p)
         return -1;
     fp = fopen(file_name, "r");
-    if(!fp)
+    if(!fp) {
+        printf("cNet Err: The config file does not exist\n");
         return -1;
+    }
 
     if(p->cli_or_ser == CONFIG_SERVER) {
         if(!p->server_config)

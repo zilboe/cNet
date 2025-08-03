@@ -316,6 +316,7 @@ int cNet_parse_line(char *line, int size, struct cNet_control_t *p)
 
 int cNet_parse_config(const char *file_name, struct cNet_control_t *p)
 {
+    int file_line=0;
     char buff[256];
     int buff_len=0;
     int parse_result=0;
@@ -340,11 +341,12 @@ int cNet_parse_config(const char *file_name, struct cNet_control_t *p)
 
     memset(buff, 0x0, sizeof(buff));
     while(fgets(buff, sizeof(buff)-1, fp) != NULL) {
+        ++file_line;
         buff_len = strlen(buff);
         parse_result = cNet_parse_line(buff, buff_len, p);
         switch(parse_result) {
             case -1:
-            case -2:
+                printf("cNet Err: Config Parse Error,line[%d]\n", file_line);
                 return -1;
             default:
                 break;

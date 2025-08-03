@@ -34,9 +34,10 @@ test: all
 	@echo "Running tests..."
 	@for t in $(wildcard $(TESTS_DIR)/*.c); do \
 		echo "Testing $$t..."; \
-		$(CC) $(CFLAGS) -o $(OBJ_DIR)/$${t##*/} $$t $(TARGET); \
+		$(CC) -DTEST $(CFLAGS) -o $(OBJ_DIR)/$${t##*/} $$t $(TARGET); \
 		$(OBJ_DIR)/$${t##*/}; \
 	done
+
 install:
 	cp $(TARGET) .
 	

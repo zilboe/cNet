@@ -26,28 +26,33 @@
 typedef struct cNet_title_t {
     char *title;
     ssize_t title_len;
-    int (*parse_callback)(const char *value, struct cNet_control_t *p);
+    int (*parse_callback)(const char *key, const char *value, struct cNet_control_t *p);
 }cNet_title_t;
 
 
-static int cNet_config_bindport(const char *value, struct cNet_control_t *p);
-static int cNet_config_serveraddr(const char *value, struct cNet_control_t *p);
-static int cNet_config_serverport(const char *value, struct cNet_control_t *p);
-static int cNet_config_proxies(const char *value, struct cNet_control_t *p);
+static int cNet_config_bindport(const char *key, const char *value, struct cNet_control_t *p);
+static int cNet_config_serveraddr(const char *key, const char *value, struct cNet_control_t *p);
+static int cNet_config_serverport(const char *key, const char *value, struct cNet_control_t *p);
+static int cNet_config_proxies(const char *key, const char *value, struct cNet_control_t *p);
+static int cNet_config_name(const char *key, const char *value, struct cNet_control_t *p);
+static int cNet_config_type(const char *key, const char *value, struct cNet_control_t *p);
+static int cNet_config_localip(const char *key, const char *value, struct cNet_control_t *p);
+static int cNet_config_localport(const char *key, const char *value, struct cNet_control_t *p);
+static int cNet_config_remoteport(const char *key, const char *value, struct cNet_control_t *p);
 
 static cNet_title_t cNet_Head[] = {
     {TITLE_BINDPORT, TITLE_BINDPORT_LEN, &cNet_config_bindport},
     {TITLE_SERVERADDR, TITLE_SERVERADDR_LEN, &cNet_config_serveraddr},
     {TITLE_SERVERPORT, TITLE_SERVERPORT_LEN, &cNet_config_serverport},
     {TITLE_PROXIES, TITLE_PROXIES_LEN, &cNet_config_proxies},
-    {TITLE_NAME, TITLE_NAME_LEN, NULL},
-    {TITLE_TYPE, TITLE_TYPE_LEN, NULL},
-    {TITLE_LOCALIP, TITLE_LOCALIP_LEN, NULL},
-    {TITLE_LOCALPORT, TITLE_LOCALPORT_LEN, NULL},
-    {TITLE_REMOTEPORT, TITLE_REMOTEPORT_LEN, NULL}
+    {TITLE_NAME, TITLE_NAME_LEN, &cNet_config_name},
+    {TITLE_TYPE, TITLE_TYPE_LEN, &cNet_config_type},
+    {TITLE_LOCALIP, TITLE_LOCALIP_LEN, &cNet_config_localip},
+    {TITLE_LOCALPORT, TITLE_LOCALPORT_LEN, &cNet_config_localport},
+    {TITLE_REMOTEPORT, TITLE_REMOTEPORT_LEN, &cNet_config_remoteport}
 };
 
-static int cNet_config_bindport(const char *value, struct cNet_control_t *p)
+static int cNet_config_bindport(const char *key, const char *value, struct cNet_control_t *p)
 {
     int port=0;
     if(!value)
@@ -63,7 +68,7 @@ static int cNet_config_bindport(const char *value, struct cNet_control_t *p)
     return 0;
 }
 
-static int cNet_config_serveraddr(const char *value, struct cNet_control_t *p)
+static int cNet_config_serveraddr(const char *key, const char *value, struct cNet_control_t *p)
 {
     int value_len=0;
     if(!value)
@@ -82,7 +87,7 @@ static int cNet_config_serveraddr(const char *value, struct cNet_control_t *p)
     return 0;
 }
 
-static int cNet_config_serverport(const char *value, struct cNet_control_t *p)
+static int cNet_config_serverport(const char *key, const char *value, struct cNet_control_t *p)
 {
     int port=0;
     if(!value)
@@ -98,15 +103,158 @@ static int cNet_config_serverport(const char *value, struct cNet_control_t *p)
     return 0;
 }
 
-static int cNet_config_proxies(const char *value, struct cNet_control_t *p)
+static int cNet_config_proxies(const char *key, const char *value, struct cNet_control_t *p)
 {
+    int key_len=0;
+    struct cNet_mapConfig_t *p_config=NULL;
+    struct cNet_mapConfig_t *p_new=NULL;
     if(p->cli_or_ser != CONFIG_CLIENT)
         return -1;
-    if(!p->client_config)
+    if(!p->client_config)   
         return -1;
-    
+    if(!key)
+        return -1;
+    key_len = strlen(key);
+    p_new = (struct cNet_mapConfig_t*)cNet_malloc(sizeof(struct cNet_mapConfig_t));
+    if(!p_new)
+        return -1;
+
+    p_new->head = (char*)cNet_malloc(sizeof(key_len));
+    if(!p_new->head)
+        return -1;
+
+    if(!p->client_config->config) {
+        p->client_config->config = p_new;
+        p->client_config->config_size = 1;
+        strncpy(p_new->head, key, key_len);
+        return 0;
+    }
+
+    p_config = p->client_config->config;
+
+    while(p_config->next)
+        p_config = p_config->next;
+    p_config->next = p_new;
+    p->client_config->config_size += 1;
+    strncpy(p_new->head, key, key_len);
     return 0;
 }
+
+static int cNet_config_name(const char *key, const char *value, struct cNet_control_t *p)
+{
+    struct cNet_mapConfig_t *p_config=NULL;
+    int value_len=0;
+    if(!value || !p)
+        return -1;
+    if(p->cli_or_ser != CONFIG_CLIENT)
+        return -1;
+    if(!p->client_config)   
+        return -1;
+    if(!p->client_config->config)
+        return -1;
+    p_config = p->client_config->config;
+    while(p_config->next)
+        p_config = p_config->next;
+    value_len = strlen(value);
+    p_config->name = (char*)cNet_malloc(sizeof(value_len));
+    if(!p_config->name)
+        return -1;
+    strncpy(p_config->name, value, value_len);
+    return 0;
+}
+
+static int cNet_config_type(const char *key, const char *value, struct cNet_control_t *p)
+{
+    struct cNet_mapConfig_t *p_config=NULL;
+    int value_len=0;
+    if(!value || !p)
+        return -1;
+    if(p->cli_or_ser != CONFIG_CLIENT)
+        return -1;
+    if(!p->client_config)   
+        return -1;
+    if(!p->client_config->config)
+        return -1;
+    p_config = p->client_config->config;
+    while(p_config->next)
+        p_config = p_config->next;
+    value_len = strlen(value);
+    p_config->type = (char*)cNet_malloc(sizeof(value_len));
+    if(!p_config->type)
+        return -1;
+    strncpy(p_config->type, value, value_len);
+    return 0;
+}
+
+static int cNet_config_localip(const char *key, const char *value, struct cNet_control_t *p)
+{
+    struct cNet_mapConfig_t *p_config=NULL;
+    int value_len=0;
+    if(!value || !p)
+        return -1;
+    if(p->cli_or_ser != CONFIG_CLIENT)
+        return -1;
+    if(!p->client_config)   
+        return -1;
+    if(!p->client_config->config)
+        return -1;
+    p_config = p->client_config->config;
+    while(p_config->next)
+        p_config = p_config->next;
+    value_len = strlen(value);
+    p_config->local_ip = (char*)cNet_malloc(sizeof(value_len));
+    if(!p_config->local_ip)
+        return -1;
+    strncpy(p_config->local_ip, value, value_len);
+    return 0;
+}
+
+static int cNet_config_localport(const char *key, const char *value, struct cNet_control_t *p)
+{
+    struct cNet_mapConfig_t *p_config=NULL;
+    int port=0;
+    if(!value || !p)
+        return -1;
+    if(p->cli_or_ser != CONFIG_CLIENT)
+        return -1;
+    if(!p->client_config)   
+        return -1;
+    if(!p->client_config->config)
+        return -1;
+    p_config = p->client_config->config;
+    while(p_config->next)
+        p_config = p_config->next;
+    
+    port = atoi(value);
+    if(port<0 || port>65535)
+        return -1;
+    p_config->local_port = port;
+    return 0;
+}
+
+static int cNet_config_remoteport(const char *key, const char *value, struct cNet_control_t *p)
+{
+    struct cNet_mapConfig_t *p_config=NULL;
+    int port=0;
+    if(!value || !p)
+        return -1;
+    if(p->cli_or_ser != CONFIG_CLIENT)
+        return -1;
+    if(!p->client_config)   
+        return -1;
+    if(!p->client_config->config)
+        return -1;
+    p_config = p->client_config->config;
+    while(p_config->next)
+        p_config = p_config->next;
+    
+    port = atoi(value);
+    if(port<0 || port>65535)
+        return -1;
+    p_config->remote_port = port;
+    return 0;
+}
+
 
 void cNet_to_lower(char *line, int size)
 {
@@ -118,15 +266,19 @@ void cNet_to_lower(char *line, int size)
     }
 }
 
+
+
 int cNet_strip_other_char(char *line, int size)
 {
     int write_pos=0;
     if(!line || size==0)
         return 0;
     for(int i=0; i<size; i++) {
-        if(line[i]!=' ' || line[i]!='"' || line[i]!='\n' || line[i]!='[' || line[i]!=']')
+        if(line[i]!=' ' && line[i]!='"' && line[i]!='\n' && line[i]!='[' && line[i]!=']')
             line[write_pos++] = line[i];
     }
+    line[write_pos] = '\0';
+
     return write_pos;
 }
 
@@ -145,23 +297,21 @@ int cNet_parse_line(char *line, int size, struct cNet_control_t *p)
     len = cNet_strip_other_char(line, size);
     if(!len)
         return 0;
-    
-    key = line;
-
-    value = strtok(key, "=");
-    
+    key = strtok(line, "=");
+    value = strtok(NULL, "=");
     len = 0;
+    len = strlen(key);
     for(int i=0; i<(sizeof(cNet_Head)/sizeof(cNet_Head[0])); i++) {
         if(len != cNet_Head[i].title_len)
             continue;
         if(strncmp(key, cNet_Head[i].title, len) == 0) {
-            value_err = cNet_Head[i].parse_callback(value, p);
+            value_err = cNet_Head[i].parse_callback(key, value, p);
+            if(!value_err)
+                return 0;
         }
-        if(!value_err)
-            return -1;
     }
 
-    return 0;
+    return -1;
 }
 
 int cNet_parse_config(const char *file_name, struct cNet_control_t *p)
@@ -197,7 +347,7 @@ int cNet_parse_config(const char *file_name, struct cNet_control_t *p)
             case -2:
                 return -1;
             default:
-                continue;
+                break;
         }
         memset(buff, 0x0, sizeof(buff));
         buff_len = 0;

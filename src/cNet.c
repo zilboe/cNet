@@ -39,9 +39,27 @@ int main(int argc, const char *argv[])
     if(!config_file)
         return -1;
     
-    if(cNet_parse_config(config_file, cNet) == -1)
+    if(cNet_parse_config(config_file, cNet) == -1) {
+        printf("cNet Err: Config Parse Error\n");
         return -1;
-    
+    }
 
+#if 1
+    if(cNet->cli_or_ser == CONFIG_SERVER) {
+        printf("Server Info: Server Port:[%d]\n", cNet->server_config->local_port);
+    } else if(cNet->cli_or_ser == CONFIG_CLIENT) {
+        printf("Client Info: Server IP:[%s]\n", cNet->client_config->server_ip);
+        printf("Client Info: Server PORT:[%d]\n", cNet->client_config->server_port);
+        while(cNet->client_config->config) {
+            printf("Client Info: Config Head:[%s]\n", cNet->client_config->config->head);
+            printf("Client Info: Config Name:[%s]\n", cNet->client_config->config->name);
+            printf("Client Info: Config Type:[%s]\n", cNet->client_config->config->type);
+            printf("Client Info: Config Localip:[%s]\n", cNet->client_config->config->local_ip);
+            printf("Client Info: Config Localport:[%d]\n", cNet->client_config->config->local_port);
+            printf("Client Info: Config Remoteport:[%d]\n", cNet->client_config->config->remote_port);
+            cNet->client_config->config = cNet->client_config->config->next;
+        }
+    }
+#endif
     return 0;
 }

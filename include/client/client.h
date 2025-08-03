@@ -8,7 +8,7 @@ struct cNet_mapConfig_t {
     char *type;
     char *local_ip;
     unsigned short local_port;
-    unsigned short server_port;
+    unsigned short remote_port;
     struct cNet_config_t *config;
     struct cNet_mapConfig_t *next;
 };

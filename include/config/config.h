@@ -3,5 +3,6 @@
 
 struct cNet_control_t;
 int cNet_parse_config(const char *file_name, struct cNet_control_t *p);
-
+extern int cNet_runServer(struct cNet_control_t *p);
+extern int cNet_runClient(struct cNet_control_t *p);
 #endif

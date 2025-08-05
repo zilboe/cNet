@@ -17,5 +17,6 @@ struct cNet_control_t {
     CONFIGS_E cli_or_ser;
     struct cNet_serverConfig_t *server_config;
     struct cNet_clientConfig_t *client_config;
+    int (*run)(struct cNet_control_t *);
 };
 #endif

@@ -5,6 +5,8 @@
 #include "cNet.h"
 #include "memory/mempool.h"
 #include "config/config.h"
+#include <openssl/aes.h>
+#include <openssl/evp.h>
 #if defined(TEST)
 #include "test.h"
 #endif
@@ -55,7 +57,7 @@ int main(int argc, const char *argv[])
     #if defined(TEST)
         cNet_print();
     #endif
-
+    cNet->run(cNet);
 
     return 0;
 }

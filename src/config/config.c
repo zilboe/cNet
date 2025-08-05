@@ -1,4 +1,5 @@
 #include "cNet.h"
+#include "config/config.h"
 #include "memory/mempool.h"
 #include <stdio.h>
 #include <string.h>
@@ -330,17 +331,22 @@ int cNet_parse_config(const char *file_name, struct cNet_control_t *p)
     }
 
     if(p->cli_or_ser == CONFIG_SERVER) {
-        if(!p->server_config)
+        if(!p->server_config) {
             p->server_config = (struct cNet_serverConfig_t*)cNet_malloc(sizeof(struct cNet_serverConfig_t));
+            p->run = cNet_runServer;
+        }
         if(!p->server_config)
             return -1; 
     } else if(p->cli_or_ser == CONFIG_CLIENT) {
-        if(!p->client_config)
+        if(!p->client_config) {
             p->client_config = (struct cNet_clientConfig_t*)cNet_malloc(sizeof(struct cNet_clientConfig_t));
+            p->run = cNet_runClient;
+        }
         if(!p->client_config)
             return -1;
     }
-
+    if(!p->run)
+        return -1;
     memset(buff, 0x0, sizeof(buff));
     while(fgets(buff, sizeof(buff)-1, fp) != NULL) {
         ++file_line;
@@ -356,6 +362,5 @@ int cNet_parse_config(const char *file_name, struct cNet_control_t *p)
         memset(buff, 0x0, sizeof(buff));
         buff_len = 0;
     }
-
     return 0;
 }

@@ -14,10 +14,10 @@ OBJS := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
 all: $(TARGET)
 $(TARGET): $(OBJS)
 	@mkdir -p $(OBJ_DIR)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) -DTEST $(CFLAGS) -o $@ $^
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) -DTEST $(CFLAGS) -c -o $@ $<
 
 gdb: $(GDB_TARGET)
 $(GDB_TARGET): $(OBJS)

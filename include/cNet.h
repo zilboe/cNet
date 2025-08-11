@@ -13,6 +13,7 @@ typedef enum CONFIGS_E {
     CONFIG_CLIENT,
 }CONFIGS_E;
 
+
 struct cNet_control_t {
     CONFIGS_E cli_or_ser;
     struct cNet_serverConfig_t *server_config;

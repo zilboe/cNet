@@ -364,3 +364,12 @@ int cNet_parse_config(const char *file_name, struct cNet_control_t *p)
     }
     return 0;
 }
+
+
+void DeInit(struct cNet_control_t *p)
+{
+    if(!p)
+        return;
+}
+
+
